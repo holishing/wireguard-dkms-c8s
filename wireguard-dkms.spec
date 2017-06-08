@@ -1,0 +1,89 @@
+%global debug_package %{nil}
+%global dkms_name wireguard
+
+Name:           %{dkms_name}-dkms
+Version:        0.0.20170531
+Release:        1%{?dist}
+Epoch:          1
+URL:            https://www.wireguard.io/
+Summary:        Fast, modern, secure VPN tunnel
+License:        GPLv2
+Group:          System Environment/Kernel
+BuildArch:      noarch
+
+Source0:        https://git.zx2c4.com/WireGuard/snapshot/WireGuard-%{version}.tar.xz
+
+BuildRequires:  kernel-devel, sed
+
+Provides:       %{dkms_name}-kmod = %{epoch}:%{version}-%{release}
+Requires:       dkms
+
+%description
+WireGuard is a novel VPN that runs inside the Linux Kernel and uses
+state-of-the-art cryptography (the "Noise" protocol). It aims to be
+faster, simpler, leaner, and more useful than IPSec, while avoiding
+the massive headache. It intends to be considerably more performant
+than OpenVPN. WireGuard is designed as a general purpose VPN for
+running on embedded interfaces and super computers alike, fit for
+many different circumstances. It runs over UDP.
+
+%prep
+%setup -q -n WireGuard-%{version}
+
+# Fix the Makefile for CentOS7 since it ships coreutils from 2013.
+sed -i 's/install .* -D -t\(.\+\) /mkdir -p \1 \&\& \0/' %{_builddir}/WireGuard-%{version}/src/Makefile
+
+%build
+
+%install
+mkdir -p %{buildroot}%{_usrsrc}/%{dkms_name}-%{version}/
+make DESTDIR=%{buildroot} DKMSDIR=%{_usrsrc}/%{dkms_name}-%{version}/ -C %{_builddir}/WireGuard-%{version}/src dkms-install
+
+%post
+dkms add -m %{dkms_name} -v %{version} -q --rpm_safe_upgrade
+dkms build -m %{dkms_name} -v %{version} -q
+dkms install -m %{dkms_name} -v %{version} -q
+
+%preun
+dkms remove -m %{dkms_name} -v %{version} --all -q --rpm_safe_upgrade
+
+%files
+%{_usrsrc}/%{dkms_name}-%{version}
+
+%changelog
+* Wed May 31 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170531-1
+- Update to 0.0.20170531
+
+* Wed May 17 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170517-1
+- Update to 0.0.20170517
+
+* Mon Apr 24 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170421-1
+- Update to 0.0.20170421
+
+* Mon Apr 10 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170409-1
+- Update to 0.0.20170409
+
+* Fri Mar 24 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170324-1
+- Update to 0.0.20170324
+
+* Mon Mar 20 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170320.1-1
+- Update to 0.0.20170320.1
+
+* Thu Mar 2 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170223-1
+- Update to 0.0.20170223
+
+* Thu Feb 16 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170214-1
+- Update to 0.0.20170214
+
+* Thu Jan 5 2017 Joe Doss <joe@solidadmin.com> - 0.0.20170105-1
+- Update to 0.0.20170105
+
+* Mon Dec 19 2016 Jason A. Donenfeld <jason@zx2c4.com> - 0.0.20161218-1
+- Spec adjustments
+
+* Wed Aug 17 2016 Joe Doss <joe@solidadmin.com> - 0.0.20160808-2
+- Spec adjustments
+
+* Mon Aug 15 2016 Joe Doss <joe@solidadmin.com> - 0.0.20160808-2
+- Initial WireGuard DKMS RPM
+- Version 0.0.20160808
