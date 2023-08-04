@@ -11,6 +11,7 @@ Group:          System Environment/Kernel
 BuildArch:      noarch
 
 Source0:        https://git.zx2c4.com/wireguard-linux-compat/snapshot/wireguard-linux-compat-%{version}.tar.xz
+Patch0:         c8s_compat.patch
 
 BuildRequires:  kernel-devel
 BuildRequires:  sed
